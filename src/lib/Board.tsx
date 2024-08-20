@@ -1,10 +1,23 @@
 "use client";
 
-import { useEffect, useRef, type JSX } from "react";
+import { MouseEventHandler, useEffect, useRef, type JSX } from "react";
+import { clear, Hero } from "./board.ts";
 /* import styles from "./Board.module.scss"; */
 
 export default function Board(): JSX.Element {
   const board = useRef<HTMLCanvasElement | null>(null);
+  const mouse = useRef({ x: 0, y: 0 });
+
+  const handleMouseMove: MouseEventHandler<HTMLCanvasElement> = (event) => {
+    const rect = board.current?.getBoundingClientRect();
+    if (!rect) {
+      return;
+    }
+    mouse.current = {
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top,
+    };
+  };
 
   useEffect(() => {
     if (!board?.current) {
@@ -15,18 +28,21 @@ export default function Board(): JSX.Element {
       return;
     }
 
+    const height = board.current.height;
+    const width = board.current.width;
+
     let mounted = true;
+
+    let hero = new Hero(4, 20, 10, 2, 100);
 
     const loop = () => {
       if (!mounted) {
         return;
       }
+      clear(ctx, width, height);
 
-      ctx.beginPath();
-      ctx.strokeStyle = "#000";
-      ctx.lineWidth = 3;
-      ctx.arc(100, 100, 50, 0, 2 * Math.PI);
-      ctx.stroke();
+      hero = hero.tick(mouse.current.x, mouse.current.y);
+      hero.draw(ctx);
 
       requestAnimationFrame(loop);
     };
@@ -38,5 +54,5 @@ export default function Board(): JSX.Element {
     };
   }, [board]);
 
-  return <canvas ref={board}></canvas>;
+  return <canvas onMouseMove={handleMouseMove} ref={board}></canvas>;
 }
