@@ -19,20 +19,19 @@ export class Projectile {
     private readonly y: number,
     private readonly velocity: number,
     private readonly radius: number,
-    private readonly width: number,
   ) {}
 
   /**
    * @returns whether projectile has been destroyed on this tick
    */
-  tick(heroX: number, heroY: number, heroRadius: number): boolean {
+  tick(heroX: number, heroY: number, heroRadius: number, width: number): boolean {
     const maybe = this.x + this.velocity;
     if (
       detectCollision(this.x, this.y, heroX, heroY, this.radius, heroRadius)
     ) {
       // hero takes damage
       return true;
-    } else if (maybe + this.radius >= this.width || maybe - this.radius <= 0) {
+    } else if (maybe + this.radius >= width || maybe - this.radius <= 0) {
       // Projectile reached the board boundary
       return true;
     }
@@ -59,8 +58,6 @@ export class Hero {
     /** the lower, the faster hero shoots */
     private firerate: number,
     private velocity: number,
-    private readonly width: number,
-    private readonly height: number,
     /** whether the hero is facing right */
     private readonly direction: boolean,
   ) {}
@@ -68,10 +65,10 @@ export class Hero {
   /**
    * @returns a new projectile if it fires one, otherwise null
    */
-  tick(mouseX: number, mouseY: number): Projectile | null {
+  tick(mouseX: number, mouseY: number, width: number, height: number): Projectile | null {
     const maybe = this.y + this.velocity;
     if (
-      maybe + this.radius >= this.height ||
+      maybe + this.radius >= height ||
       maybe - this.radius <= 0 ||
       detectCollision(this.x, this.y, mouseX, mouseY, this.radius, MOUSE_RADIUS)
     ) {
@@ -92,7 +89,6 @@ export class Hero {
         this.y,
         projVelocity,
         PROJECTILE_RADIUS,
-        this.width,
       );
     } else {
       this.cooldown += 1;
@@ -107,13 +103,4 @@ export class Hero {
     ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
     ctx.stroke();
   }
-}
-
-export function clear(
-  ctx: CanvasRenderingContext2D,
-  width: number,
-  height: number,
-): void {
-  ctx.fillStyle = "#fff";
-  ctx.fillRect(0, 0, width, height);
 }
