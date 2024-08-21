@@ -1,7 +1,7 @@
 "use client";
 
 import { MouseEventHandler, useEffect, useRef, type JSX } from "react";
-import {BoardManager } from "./board.ts";
+import { BoardManager } from "./board.ts";
 import styles from "./Board.module.scss";
 
 export default function Board(): JSX.Element {

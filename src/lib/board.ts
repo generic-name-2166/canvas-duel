@@ -1,6 +1,7 @@
 const MOUSE_RADIUS = 5;
 const PROJECTILE_VELOCITY = 5;
 const PROJECTILE_RADIUS = 3;
+const MAX_PROJECTILES = 1000;
 
 function detectCollision(
   x1: number,
@@ -19,8 +20,11 @@ export class BoardManager {
   private hero2: Hero;
   private projectiles2: Projectile[] = [];
 
-  constructor(private ctx: CanvasRenderingContext2D, width: number) {
-  // Saving clean canvas to reset to on every tick
+  constructor(
+    private ctx: CanvasRenderingContext2D,
+    width: number,
+  ) {
+    // Saving clean canvas to reset to on every tick
     this.ctx.save();
     this.hero1 = new Hero(50, 20, 10, 100, 2, true);
     this.hero2 = new Hero(width - 50, 20, 10, 100, 2, false);
@@ -33,16 +37,16 @@ export class BoardManager {
     mouseX: number,
     mouseY: number,
   ): void {
-    const proj1 = this.hero1.tick(mouseX, mouseY, height);
-    if (this.projectiles1.length > 10) {
+    const proj1 = this.hero1.tick(time, mouseX, mouseY, height);
+    if (this.projectiles1.length >= MAX_PROJECTILES) {
       this.projectiles1.shift();
     }
     if (proj1 !== null) {
       this.projectiles1.push(proj1);
     }
 
-    const proj2 = this.hero2.tick(mouseX, mouseY, height);
-    if (this.projectiles2.length > 10) {
+    const proj2 = this.hero2.tick(time, mouseX, mouseY, height);
+    if (this.projectiles2.length >= MAX_PROJECTILES) {
       this.projectiles2.shift();
     }
     if (proj2 !== null) {
@@ -51,10 +55,12 @@ export class BoardManager {
 
     // side effects in filter :(
     this.projectiles1 = this.projectiles1.filter(
-      (proj) => !proj.tick(this.hero2.x, this.hero2.y, this.hero2.radius, width),
+      (proj) =>
+        !proj.tick(this.hero2.x, this.hero2.y, this.hero2.radius, width),
     );
     this.projectiles2 = this.projectiles2.filter(
-      (proj) => !proj.tick(this.hero1.x, this.hero1.y, this.hero1.radius, width),
+      (proj) =>
+        !proj.tick(this.hero1.x, this.hero1.y, this.hero1.radius, width),
     );
   }
 
@@ -114,13 +120,17 @@ class Projectile {
 }
 
 class Hero {
-  private cooldown: number = 0;
+  /* milliseconds since last shot */
+  private lastShot: DOMHighResTimeStamp = 0;
 
   constructor(
     public x: number,
     public y: number,
     public readonly radius: number,
-    /** the lower, the faster hero shoots */
+    /**
+     * hero shoots every `firerate` microseconds
+     * the lower, the faster hero shoots
+     */
     private firerate: number,
     private velocity: number,
     /** whether the hero is facing right */
@@ -131,6 +141,7 @@ class Hero {
    * @returns a new projectile if it fires one, otherwise null
    */
   tick(
+    time: DOMHighResTimeStamp,
     mouseX: number,
     mouseY: number,
     height: number,
@@ -148,16 +159,15 @@ class Hero {
 
     this.y = this.y + this.velocity;
 
-    if (this.cooldown >= this.firerate) {
-      this.cooldown = 0;
+    if (time - this.lastShot >= this.firerate) {
       const projVelocity = this.direction
         ? PROJECTILE_VELOCITY
         : -PROJECTILE_VELOCITY;
+      this.lastShot = time;
       return new Projectile(this.x, this.y, projVelocity, PROJECTILE_RADIUS);
-    } else {
-      this.cooldown += 1;
-      return null;
     }
+
+    return null;
   }
 
   draw(ctx: CanvasRenderingContext2D): void {
