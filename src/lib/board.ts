@@ -15,9 +15,11 @@ export class Hero {
     private readonly radius: number,
     private velocity: number,
     private readonly height: number,
+    // whether the hero is facing right
+    private readonly direction: boolean,
   ) {}
 
-  tick(mouseX: number, mouseY: number): Hero {
+  tick(mouseX: number, mouseY: number): void {
     const maybe = this.y + this.velocity;
     if (
       maybe + this.radius >= this.height ||
@@ -30,8 +32,6 @@ export class Hero {
     }
 
     this.y = this.y + this.velocity;
-
-    return this;
   }
 
   draw(ctx: CanvasRenderingContext2D): void {

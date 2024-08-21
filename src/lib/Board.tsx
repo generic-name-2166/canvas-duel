@@ -33,7 +33,8 @@ export default function Board(): JSX.Element {
 
     let mounted = true;
 
-    let hero = new Hero(4, 20, 10, 2, 100);
+    const hero1 = new Hero(10, 20, 10, 2, 100, true);
+    const hero2 = new Hero(90, 20, 10, 2, 100, false);
 
     const loop = () => {
       if (!mounted) {
@@ -41,8 +42,10 @@ export default function Board(): JSX.Element {
       }
       clear(ctx, width, height);
 
-      hero = hero.tick(mouse.current.x, mouse.current.y);
-      hero.draw(ctx);
+      hero1.tick(mouse.current.x, mouse.current.y);
+      hero1.draw(ctx);
+      hero2.tick(mouse.current.x, mouse.current.y);
+      hero2.draw(ctx);
 
       requestAnimationFrame(loop);
     };
