@@ -13,7 +13,67 @@ function detectCollision(
   return radius1 + radius2 >= Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
 }
 
-export class Projectile {
+export class BoardManager {
+  private hero1: Hero;
+  private projectiles1: Projectile[] = [];
+  private hero2: Hero;
+  private projectiles2: Projectile[] = [];
+
+  constructor(private ctx: CanvasRenderingContext2D, width: number) {
+  // Saving clean canvas to reset to on every tick
+    this.ctx.save();
+    this.hero1 = new Hero(50, 20, 10, 100, 2, true);
+    this.hero2 = new Hero(width - 50, 20, 10, 100, 2, false);
+  }
+
+  tick(
+    time: DOMHighResTimeStamp,
+    width: number,
+    height: number,
+    mouseX: number,
+    mouseY: number,
+  ): void {
+    const proj1 = this.hero1.tick(mouseX, mouseY, height);
+    if (this.projectiles1.length > 10) {
+      this.projectiles1.shift();
+    }
+    if (proj1 !== null) {
+      this.projectiles1.push(proj1);
+    }
+
+    const proj2 = this.hero2.tick(mouseX, mouseY, height);
+    if (this.projectiles2.length > 10) {
+      this.projectiles2.shift();
+    }
+    if (proj2 !== null) {
+      this.projectiles2.push(proj2);
+    }
+
+    // side effects in filter :(
+    this.projectiles1 = this.projectiles1.filter(
+      (proj) => !proj.tick(this.hero2.x, this.hero2.y, this.hero2.radius, width),
+    );
+    this.projectiles2 = this.projectiles2.filter(
+      (proj) => !proj.tick(this.hero1.x, this.hero1.y, this.hero1.radius, width),
+    );
+  }
+
+  draw(): void {
+    this.ctx.restore();
+
+    this.hero1.draw(this.ctx);
+    this.hero2.draw(this.ctx);
+
+    for (const proj of this.projectiles1) {
+      proj.draw(this.ctx);
+    }
+    for (const proj of this.projectiles2) {
+      proj.draw(this.ctx);
+    }
+  }
+}
+
+class Projectile {
   constructor(
     private x: number,
     private readonly y: number,
@@ -24,7 +84,12 @@ export class Projectile {
   /**
    * @returns whether projectile has been destroyed on this tick
    */
-  tick(heroX: number, heroY: number, heroRadius: number, width: number): boolean {
+  tick(
+    heroX: number,
+    heroY: number,
+    heroRadius: number,
+    width: number,
+  ): boolean {
     const maybe = this.x + this.velocity;
     if (
       detectCollision(this.x, this.y, heroX, heroY, this.radius, heroRadius)
@@ -48,11 +113,11 @@ export class Projectile {
   }
 }
 
-export class Hero {
+class Hero {
   private cooldown: number = 0;
 
   constructor(
-    public readonly x: number,
+    public x: number,
     public y: number,
     public readonly radius: number,
     /** the lower, the faster hero shoots */
@@ -65,7 +130,11 @@ export class Hero {
   /**
    * @returns a new projectile if it fires one, otherwise null
    */
-  tick(mouseX: number, mouseY: number, width: number, height: number): Projectile | null {
+  tick(
+    mouseX: number,
+    mouseY: number,
+    height: number,
+  ): Projectile | null {
     const maybe = this.y + this.velocity;
     if (
       maybe + this.radius >= height ||
@@ -84,12 +153,7 @@ export class Hero {
       const projVelocity = this.direction
         ? PROJECTILE_VELOCITY
         : -PROJECTILE_VELOCITY;
-      return new Projectile(
-        this.x,
-        this.y,
-        projVelocity,
-        PROJECTILE_RADIUS,
-      );
+      return new Projectile(this.x, this.y, projVelocity, PROJECTILE_RADIUS);
     } else {
       this.cooldown += 1;
       return null;
