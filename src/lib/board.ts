@@ -4,7 +4,13 @@ const PROJECTILE_VELOCITY = 5;
 const PROJECTILE_RADIUS = 5;
 const MAX_PROJECTILES = 1000;
 const SCORE_OFFSET = 60;
-export const COLOUR = "#ddd";
+
+export const enum HeroColours {
+  Default = "#ddd",
+  Red = "#ff0000",
+  Blue = "#0000ff",
+  Green = "#00ff00",
+}
 
 function detectCollision(
   x1: number,
@@ -51,9 +57,9 @@ class Projectile {
     return ProjectileResult.None;
   }
 
-  draw(ctx: CanvasRenderingContext2D): void {
+  draw(ctx: CanvasRenderingContext2D, colour: HeroColours): void {
     ctx.beginPath();
-    ctx.fillStyle = COLOUR;
+    ctx.fillStyle = colour;
     ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
     ctx.fill();
   }
@@ -140,7 +146,7 @@ class Hero {
     return null;
   }
 
-  draw(ctx: CanvasRenderingContext2D, colour: string): void {
+  draw(ctx: CanvasRenderingContext2D, colour: HeroColours): void {
     ctx.beginPath();
     ctx.fillStyle = colour;
     ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
@@ -262,26 +268,52 @@ export class BoardManager {
     });
   }
 
-  draw(hero1colour: string, hero2colour: string): void {
+  draw(hero1colour: HeroColours, hero2colour: HeroColours): void {
     this.ctx.restore();
 
     this.hero1.draw(this.ctx, hero1colour);
     this.hero2.draw(this.ctx, hero2colour);
 
     for (const proj of this.projectiles1) {
-      proj.draw(this.ctx);
+      proj.draw(this.ctx, hero1colour);
     }
     for (const proj of this.projectiles2) {
-      proj.draw(this.ctx);
+      proj.draw(this.ctx, hero2colour);
     }
   }
 
   pauseHero(mouseX: number, mouseY: number): Paused {
-    if (detectCollision(this.hero1.x, this.hero1.y, mouseX, mouseY, this.hero1.radius, 0)) {
+    if (
+      detectCollision(
+        this.hero1.x,
+        this.hero1.y,
+        mouseX,
+        mouseY,
+        this.hero1.radius,
+        0,
+      )
+    ) {
       return Paused.Hero1;
-    } else if (detectCollision(this.hero2.x, this.hero2.y, mouseX, mouseY, this.hero2.radius, 0)) {
+    } else if (
+      detectCollision(
+        this.hero2.x,
+        this.hero2.y,
+        mouseX,
+        mouseY,
+        this.hero2.radius,
+        0,
+      )
+    ) {
       return Paused.Hero2;
     }
     return Paused.None;
+  }
+
+  getHero1Y(): number {
+    return this.hero1.y;
+  }
+
+  getHero2Y(): number {
+    return this.hero2.y;
   }
 }

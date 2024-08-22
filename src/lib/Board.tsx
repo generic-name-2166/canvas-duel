@@ -6,10 +6,16 @@ import {
   useEffect,
   useRef,
   type JSX,
+  type ChangeEventHandler,
 } from "react";
-import { BoardManager, COLOUR, Paused } from "./board.ts";
+import { BoardManager, HeroColours, Paused } from "./board.ts";
 import styles from "./Board.module.scss";
-import Control, { type ControlProps, INITIAL_FIRERATE, INITIAL_VELOCITY } from "./Control.tsx";
+import Control, {
+  type ControlProps,
+  INITIAL_FIRERATE,
+  INITIAL_VELOCITY,
+} from "./Control.tsx";
+import ColourDialog from "./ColourDialog.tsx";
 
 function handleChange(
   ref: MutableRefObject<number>,
@@ -20,9 +26,19 @@ function handleChange(
 export default function Board(): JSX.Element {
   const board = useRef<HTMLDivElement | null>(null);
   const canvas = useRef<HTMLCanvasElement | null>(null);
-  const dialog = useRef<HTMLDialogElement | null>(null);
+  const dialog1 = useRef<HTMLDialogElement | null>(null);
+  const dialog2 = useRef<HTMLDialogElement | null>(null);
   const paused = useRef<Paused>(Paused.None);
+  const hero1colour = useRef<HeroColours>(HeroColours.Default);
+  const hero2colour = useRef<HeroColours>(HeroColours.Default);
   const mouse = useRef({ x: 0, y: 0 });
+
+  const changeColour1 = (colour: HeroColours): void => {
+    hero1colour.current = colour;
+  };
+  const changeColour2 = (colour: HeroColours): void => {
+    hero2colour.current = colour;
+  };
 
   /**
    * hero shoots every `firerate` microseconds
@@ -50,6 +66,9 @@ export default function Board(): JSX.Element {
   };
 
   const handleClick = useRef<MouseEventHandler<HTMLCanvasElement>>(() => {});
+  const closeDialog = () => {
+    paused.current = Paused.None;
+  };
 
   useEffect(() => {
     if (!board?.current || !canvas?.current) {
@@ -81,7 +100,34 @@ export default function Board(): JSX.Element {
       const rect = canvas.current!.getBoundingClientRect();
       const mouseX = event.clientX - rect.left;
       const mouseY = event.clientY - rect.top;
-      paused.current = manager.pauseHero(mouseX, mouseY);
+      const p = manager.pauseHero(mouseX, mouseY);
+      paused.current = p;
+      switch (p) {
+        case Paused.None:
+          if (dialog1.current?.open) {
+            dialog1.current.close();
+          }
+          if (dialog2.current?.open) {
+            dialog2.current.close();
+          }
+          return;
+        case Paused.Hero1:
+          dialog1.current!.show();
+          dialog1.current!.style.left = `${-width + 300}px`;
+          dialog1.current!.style.top = `${manager.getHero1Y()}px`;
+          if (dialog2.current!.open) {
+            dialog2.current!.close();
+          }
+          return;
+        case Paused.Hero2:
+          dialog2.current!.show();
+          dialog2.current!.style.left = `${width - 300}px`;
+          dialog2.current!.style.top = `${manager.getHero2Y()}px`;
+          if (dialog1.current!.open) {
+            dialog1.current!.close();
+          }
+          return;
+      }
     };
 
     const loop = (time: DOMHighResTimeStamp) => {
@@ -104,7 +150,7 @@ export default function Board(): JSX.Element {
         hero2velocity.current,
         paused.current,
       );
-      manager.draw("#ddd", "#ddd");
+      manager.draw(hero1colour.current, hero2colour.current);
 
       requestAnimationFrame(loop);
     };
@@ -126,11 +172,16 @@ export default function Board(): JSX.Element {
         ref={canvas}
       ></canvas>
 
-      <dialog ref={dialog}>
-        <select>
-          <option value={COLOUR}>Default</option>
-        </select>
-      </dialog>
+      <ColourDialog
+        ref={dialog1}
+        changeColour={changeColour1}
+        closeDialog={closeDialog}
+      />
+      <ColourDialog
+        ref={dialog2}
+        changeColour={changeColour2}
+        closeDialog={closeDialog}
+      />
 
       <div className={styles.control}>
         <Control
