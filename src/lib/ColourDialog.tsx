@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 import { HeroColours } from "./board.ts";
+import styles from "./ColourDialog.module.scss";
 
 export interface ColourDialog {
   changeColour(colour: HeroColours): void;
@@ -27,8 +28,8 @@ export default forwardRef(function ColourDialog(
   };
 
   return (
-    <dialog ref={ref}>
-      <form>
+    <dialog ref={ref} className={styles.dialog}>
+      <form className={styles.form}>
         <select value={colour} onChange={onChange}>
           <option disabled defaultValue="">
             Colour

@@ -196,7 +196,8 @@ export default function Board(): JSX.Element {
         />
         <p className={styles.p}>
           Change the heroes&apos; firerate and velocity. The lower the firerate,
-          the faster the hero attacks.
+          the faster the hero attacks. Click on the heroes to change their
+          colour.
         </p>
       </div>
     </div>

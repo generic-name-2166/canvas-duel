@@ -5,3 +5,9 @@ body {
   color: #ddd;
   font-family: Helvetica, Arial, sans-serif;
 }
+
+button,
+select,
+option {
+  font-family: inherit;
+}
