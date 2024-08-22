@@ -7,7 +7,7 @@ import {
   useRef,
   type JSX,
 } from "react";
-import { BoardManager } from "./board.ts";
+import { BoardManager, COLOUR, Paused } from "./board.ts";
 import styles from "./Board.module.scss";
 import Control, { type ControlProps, INITIAL_FIRERATE, INITIAL_VELOCITY } from "./Control.tsx";
 
@@ -20,6 +20,8 @@ function handleChange(
 export default function Board(): JSX.Element {
   const board = useRef<HTMLDivElement | null>(null);
   const canvas = useRef<HTMLCanvasElement | null>(null);
+  const dialog = useRef<HTMLDialogElement | null>(null);
+  const paused = useRef<Paused>(Paused.None);
   const mouse = useRef({ x: 0, y: 0 });
 
   /**
@@ -47,6 +49,8 @@ export default function Board(): JSX.Element {
     };
   };
 
+  const handleClick = useRef<MouseEventHandler<HTMLCanvasElement>>(() => {});
+
   useEffect(() => {
     if (!board?.current || !canvas?.current) {
       return;
@@ -73,6 +77,13 @@ export default function Board(): JSX.Element {
 
     const manager = new BoardManager(ctx, width);
 
+    handleClick.current = (event) => {
+      const rect = canvas.current!.getBoundingClientRect();
+      const mouseX = event.clientX - rect.left;
+      const mouseY = event.clientY - rect.top;
+      paused.current = manager.pauseHero(mouseX, mouseY);
+    };
+
     const loop = (time: DOMHighResTimeStamp) => {
       if (!mounted) {
         return;
@@ -91,8 +102,9 @@ export default function Board(): JSX.Element {
         hero1velocity.current,
         hero2firerate.current,
         hero2velocity.current,
+        paused.current,
       );
-      manager.draw();
+      manager.draw("#ddd", "#ddd");
 
       requestAnimationFrame(loop);
     };
@@ -109,8 +121,16 @@ export default function Board(): JSX.Element {
       <canvas
         className={styles.canvas}
         onMouseMove={handleMouseMove}
+        // wrapper closure so that the ref is dynamic
+        onClick={(e) => handleClick.current(e)}
         ref={canvas}
       ></canvas>
+
+      <dialog ref={dialog}>
+        <select>
+          <option value={COLOUR}>Default</option>
+        </select>
+      </dialog>
 
       <div className={styles.control}>
         <Control

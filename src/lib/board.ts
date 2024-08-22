@@ -4,7 +4,7 @@ const PROJECTILE_VELOCITY = 5;
 const PROJECTILE_RADIUS = 5;
 const MAX_PROJECTILES = 1000;
 const SCORE_OFFSET = 60;
-const COLOUR = "#ddd";
+export const COLOUR = "#ddd";
 
 function detectCollision(
   x1: number,
@@ -85,7 +85,12 @@ class Hero {
     mouseX: number,
     mouseY: number,
     height: number,
+    paused: boolean,
   ): Projectile | null {
+    if (paused) {
+      return null;
+    }
+
     if (this.up) {
       if (
         this.y - velocity - this.radius <= 0 ||
@@ -135,9 +140,9 @@ class Hero {
     return null;
   }
 
-  draw(ctx: CanvasRenderingContext2D): void {
+  draw(ctx: CanvasRenderingContext2D, colour: string): void {
     ctx.beginPath();
-    ctx.fillStyle = COLOUR;
+    ctx.fillStyle = colour;
     ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
     ctx.fill();
 
@@ -150,6 +155,12 @@ class Hero {
     const offset = ctx.measureText(score).width;
     ctx.fillText(score, this.x - offset - SCORE_OFFSET, SCORE_OFFSET);
   }
+}
+
+export const enum Paused {
+  None,
+  Hero1,
+  Hero2,
 }
 
 export class BoardManager {
@@ -178,6 +189,7 @@ export class BoardManager {
     hero1velocity: number,
     hero2firerate: number,
     hero2velocity: number,
+    paused: Paused,
   ): void {
     this.hero2.x = width - 50;
 
@@ -188,6 +200,7 @@ export class BoardManager {
       mouseX,
       mouseY,
       height,
+      paused === Paused.Hero1,
     );
     if (this.projectiles1.length >= MAX_PROJECTILES) {
       this.projectiles1.shift();
@@ -203,6 +216,7 @@ export class BoardManager {
       mouseX,
       mouseY,
       height,
+      paused === Paused.Hero2,
     );
     if (this.projectiles2.length >= MAX_PROJECTILES) {
       this.projectiles2.shift();
@@ -248,11 +262,11 @@ export class BoardManager {
     });
   }
 
-  draw(): void {
+  draw(hero1colour: string, hero2colour: string): void {
     this.ctx.restore();
 
-    this.hero1.draw(this.ctx);
-    this.hero2.draw(this.ctx);
+    this.hero1.draw(this.ctx, hero1colour);
+    this.hero2.draw(this.ctx, hero2colour);
 
     for (const proj of this.projectiles1) {
       proj.draw(this.ctx);
@@ -260,5 +274,14 @@ export class BoardManager {
     for (const proj of this.projectiles2) {
       proj.draw(this.ctx);
     }
+  }
+
+  pauseHero(mouseX: number, mouseY: number): Paused {
+    if (detectCollision(this.hero1.x, this.hero1.y, mouseX, mouseY, this.hero1.radius, 0)) {
+      return Paused.Hero1;
+    } else if (detectCollision(this.hero2.x, this.hero2.y, mouseX, mouseY, this.hero2.radius, 0)) {
+      return Paused.Hero2;
+    }
+    return Paused.None;
   }
 }
