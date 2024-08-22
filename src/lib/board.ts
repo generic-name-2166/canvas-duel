@@ -63,17 +63,13 @@ class Hero {
   private lastShot: DOMHighResTimeStamp = 0;
   /** number of times hero hit the target */
   public hits: number = 0;
+  /** whether the hero is moving upwards */
+  private up: boolean = false;
 
   constructor(
     public x: number,
     public y: number,
     public readonly radius: number,
-    /**
-     * hero shoots every `firerate` microseconds
-     * the lower, the faster hero shoots
-     */
-    private firerate: number,
-    private velocity: number,
     /** whether the hero is facing right */
     private readonly direction: boolean,
   ) {}
@@ -83,24 +79,51 @@ class Hero {
    */
   tick(
     time: DOMHighResTimeStamp,
+    firerate: number,
+    velocity: number,
     mouseX: number,
     mouseY: number,
     height: number,
   ): Projectile | null {
-    const maybe = this.y + this.velocity;
-    if (
-      maybe + this.radius >= height ||
-      maybe - this.radius <= 0 ||
-      detectCollision(this.x, this.y, mouseX, mouseY, this.radius, MOUSE_RADIUS)
-    ) {
-      // Change direction on boundary
-      // or on mouse collision
-      this.velocity = -this.velocity;
+    if (this.up) {
+      if (
+        this.y - velocity - this.radius <= 0 ||
+        detectCollision(
+          this.x,
+          this.y,
+          mouseX,
+          mouseY,
+          this.radius,
+          MOUSE_RADIUS,
+        )
+      ) {
+        // hit upper boundary or the mouse cursor
+        this.up = false;
+        this.y = this.y + velocity;
+      } else {
+        this.y = this.y - velocity;
+      }
+    } else {
+      if (
+        this.y + velocity + this.radius >= height ||
+        detectCollision(
+          this.x,
+          this.y,
+          mouseX,
+          mouseY,
+          this.radius,
+          MOUSE_RADIUS,
+        )
+      ) {
+        // hit lower boundary or the mnouse cursor
+        this.up = true;
+        this.y = this.y - velocity;
+      } else {
+        this.y = this.y + velocity;
+      }
     }
 
-    this.y = this.y + this.velocity;
-
-    if (time - this.lastShot >= this.firerate) {
+    if (time - this.lastShot >= firerate) {
       const projVelocity = this.direction
         ? PROJECTILE_VELOCITY
         : -PROJECTILE_VELOCITY;
@@ -141,8 +164,8 @@ export class BoardManager {
   ) {
     // Saving clean canvas to reset to on every tick
     this.ctx.save();
-    this.hero1 = new Hero(50, 20, 10, 100, 2, true);
-    this.hero2 = new Hero(width - 50, 20, 10, 100, 2, false);
+    this.hero1 = new Hero(50, 20, 10, true);
+    this.hero2 = new Hero(width - 50, 20, 10, false);
   }
 
   tick(
@@ -151,10 +174,21 @@ export class BoardManager {
     height: number,
     mouseX: number,
     mouseY: number,
+    hero1firerate: number,
+    hero1velocity: number,
+    hero2firerate: number,
+    hero2velocity: number,
   ): void {
     this.hero2.x = width - 50;
 
-    const proj1 = this.hero1.tick(time, mouseX, mouseY, height);
+    const proj1 = this.hero1.tick(
+      time,
+      hero1firerate,
+      hero1velocity,
+      mouseX,
+      mouseY,
+      height,
+    );
     if (this.projectiles1.length >= MAX_PROJECTILES) {
       this.projectiles1.shift();
     }
@@ -162,7 +196,14 @@ export class BoardManager {
       this.projectiles1.push(proj1);
     }
 
-    const proj2 = this.hero2.tick(time, mouseX, mouseY, height);
+    const proj2 = this.hero2.tick(
+      time,
+      hero2firerate,
+      hero2velocity,
+      mouseX,
+      mouseY,
+      height,
+    );
     if (this.projectiles2.length >= MAX_PROJECTILES) {
       this.projectiles2.shift();
     }

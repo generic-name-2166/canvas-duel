@@ -1,13 +1,40 @@
 "use client";
 
-import { MouseEventHandler, useEffect, useRef, type JSX } from "react";
+import {
+  type MouseEventHandler,
+  type MutableRefObject,
+  useEffect,
+  useRef,
+  type JSX,
+} from "react";
 import { BoardManager } from "./board.ts";
 import styles from "./Board.module.scss";
+import Control, { type ControlProps, INITIAL_FIRERATE, INITIAL_VELOCITY } from "./Control.tsx";
+
+function handleChange(
+  ref: MutableRefObject<number>,
+): ControlProps["changeFirerate"] {
+  return (value: number) => (ref.current = value);
+}
 
 export default function Board(): JSX.Element {
   const board = useRef<HTMLDivElement | null>(null);
   const canvas = useRef<HTMLCanvasElement | null>(null);
   const mouse = useRef({ x: 0, y: 0 });
+
+  /**
+   * hero shoots every `firerate` microseconds
+   * the lower, the faster hero shoots
+   */
+  const hero1firerate = useRef(INITIAL_FIRERATE);
+  const changeHero1Firerate = handleChange(hero1firerate);
+  const hero1velocity = useRef(INITIAL_VELOCITY);
+  const changeHero1Velocity = handleChange(hero1velocity);
+
+  const hero2firerate = useRef(INITIAL_FIRERATE);
+  const changeHero2Firerate = handleChange(hero2firerate);
+  const hero2velocity = useRef(INITIAL_VELOCITY);
+  const changeHero2Velocity = handleChange(hero2velocity);
 
   const handleMouseMove: MouseEventHandler<HTMLCanvasElement> = (event) => {
     const rect = canvas.current?.getBoundingClientRect();
@@ -54,7 +81,17 @@ export default function Board(): JSX.Element {
       canvas.current!.width = width;
       canvas.current!.height = height;
 
-      manager.tick(time, width, height, mouse.current.x, mouse.current.y);
+      manager.tick(
+        time,
+        width,
+        height,
+        mouse.current.x,
+        mouse.current.y,
+        hero1firerate.current,
+        hero1velocity.current,
+        hero2firerate.current,
+        hero2velocity.current,
+      );
       manager.draw();
 
       requestAnimationFrame(loop);
@@ -74,6 +111,23 @@ export default function Board(): JSX.Element {
         onMouseMove={handleMouseMove}
         ref={canvas}
       ></canvas>
+
+      <div className={styles.control}>
+        <Control
+          name="Hero 1"
+          changeFirerate={changeHero1Firerate}
+          changeVelocity={changeHero1Velocity}
+        />
+        <Control
+          name="Hero 2"
+          changeFirerate={changeHero2Firerate}
+          changeVelocity={changeHero2Velocity}
+        />
+      </div>
+      <p>
+        Change the heroes&apos; firerate and velocity. The lower the firerate,
+        the faster the hero attacks.
+      </p>
     </div>
   );
 }

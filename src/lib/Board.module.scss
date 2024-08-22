@@ -11,3 +11,8 @@
   width: 100%;
   height: calc(100% - 300px);
 }
+
+.control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
