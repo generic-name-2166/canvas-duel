@@ -6,7 +6,6 @@ import {
   useEffect,
   useRef,
   type JSX,
-  type ChangeEventHandler,
 } from "react";
 import { BoardManager, HeroColours, Paused } from "./board.ts";
 import styles from "./Board.module.scss";
