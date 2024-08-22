@@ -1,8 +1,10 @@
+const HERO_RADIUS = 15;
 const MOUSE_RADIUS = 5;
 const PROJECTILE_VELOCITY = 5;
-const PROJECTILE_RADIUS = 3;
+const PROJECTILE_RADIUS = 5;
 const MAX_PROJECTILES = 1000;
 const SCORE_OFFSET = 60;
+const COLOUR = "#ddd";
 
 function detectCollision(
   x1: number,
@@ -51,10 +53,9 @@ class Projectile {
 
   draw(ctx: CanvasRenderingContext2D): void {
     ctx.beginPath();
-    ctx.strokeStyle = "#000";
-    ctx.lineWidth = 3;
+    ctx.fillStyle = COLOUR;
     ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
-    ctx.stroke();
+    ctx.fill();
   }
 }
 
@@ -136,13 +137,12 @@ class Hero {
 
   draw(ctx: CanvasRenderingContext2D): void {
     ctx.beginPath();
-    ctx.strokeStyle = "#000";
-    ctx.lineWidth = 3;
+    ctx.fillStyle = COLOUR;
     ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
-    ctx.stroke();
+    ctx.fill();
 
     const score = `${this.hits} hits`;
-    ctx.font = "48px serif";
+    ctx.font = "48px Helvetica";
     if (this.direction) {
       ctx.fillText(score, this.x + SCORE_OFFSET, SCORE_OFFSET);
       return;
@@ -164,8 +164,8 @@ export class BoardManager {
   ) {
     // Saving clean canvas to reset to on every tick
     this.ctx.save();
-    this.hero1 = new Hero(50, 20, 10, true);
-    this.hero2 = new Hero(width - 50, 20, 10, false);
+    this.hero1 = new Hero(50, 20, HERO_RADIUS, true);
+    this.hero2 = new Hero(width - 50, 20, HERO_RADIUS, false);
   }
 
   tick(

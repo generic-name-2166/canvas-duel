@@ -123,11 +123,11 @@ export default function Board(): JSX.Element {
           changeFirerate={changeHero2Firerate}
           changeVelocity={changeHero2Velocity}
         />
+        <p className={styles.p}>
+          Change the heroes&apos; firerate and velocity. The lower the firerate,
+          the faster the hero attacks.
+        </p>
       </div>
-      <p>
-        Change the heroes&apos; firerate and velocity. The lower the firerate,
-        the faster the hero attacks.
-      </p>
     </div>
   );
 }

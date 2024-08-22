@@ -15,4 +15,9 @@
 .control {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  padding: 1rem;
+}
+
+.p {
+  grid-column: span 2;
 }

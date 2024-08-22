@@ -3,7 +3,7 @@
 import { type ChangeEventHandler, useId, useState, type JSX } from "react";
 import styles from "./Control.module.scss";
 
-export const INITIAL_FIRERATE: number = 100;
+export const INITIAL_FIRERATE: number = 150;
 export const INITIAL_VELOCITY: number = 2;
 
 export interface ControlProps {
