@@ -1,6 +1,8 @@
 # Canvas Duel
 
-A simple game in React with Canvas API.
+A simple interactive game in React with Canvas API. 
+
+![Screenshot](screenshot.png)
 
 Play with it [here](https://generic-name-2166.github.io/canvas-duel)
 
